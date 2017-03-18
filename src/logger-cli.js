@@ -17,7 +17,14 @@ const options = [
         defaultValue: '1chDUWfJN__BwnfehtEgRnA81iA619Qpze7-nBWfT3Hs'
     },
     {name: 'mock', alias: 'm', type: Boolean, description: 'Use mock data', defaultValue: false},
-    {name: 'poll', alias: 'p', type: Number, description: 'How often to poll (ms)', defaultValue: 5 * 60 * 1000},
+    {name: 'poll', alias: 'p', type: Number, description: 'How often to poll (ms)', defaultValue: 30 * 60 * 1000},
+    {
+        name: 'poll2',
+        alias: 'c',
+        type: Number,
+        description: 'How often to poll for sheet 2 (circular) (ms)',
+        defaultValue: 5 * 60 * 1000
+    },
     {name: 'printEvery', type: Number, description: 'Every N data points, print to console', defaultValue: 12},
     {name: 'secretPath', alias: 's', type: Number, description: 'Path to client_secret.json for Google API'},
     {name: 'help', alias: 'h', type: Boolean, description: 'Show this documentation'}
