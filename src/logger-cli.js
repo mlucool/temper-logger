@@ -25,7 +25,7 @@ const options = [
         description: 'How often to poll for sheet 2 (circular) (ms)',
         defaultValue: 5 * 60 * 1000
     },
-    {name: 'printEvery', type: Number, description: 'Every N data points, print to console', defaultValue: 12},
+    {name: 'printEvery', type: Number, description: 'Every N data points, print to console', defaultValue: 2},
     {name: 'secretPath', alias: 's', type: Number, description: 'Path to client_secret.json for Google API'},
     {name: 'help', alias: 'h', type: Boolean, description: 'Show this documentation'}
 ];

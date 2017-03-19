@@ -61,13 +61,13 @@ export default async function logger({mock, spreadsheetId, poll, poll2, printEve
             if (count === 1 || (printEvery && count % printEvery === 0)) {
                 console.log(`Reading #${count}: ${mappedTemps}`);
             }
-            if (count === mainSheetRatio) {
+            if (count === 1 || count % mainSheetRatio === 0) {
                 await appendValues(spreadsheetId, oauth2Client, mappedTemps);
             }
             await updateLatestValues(spreadsheetId, oauth2Client, mappedTemps);
+            // Recover from errors by just printing them and keep going
         } catch (err) {
             console.error(err);
-            process.exit(1);
         }
     };
 
@@ -76,7 +76,20 @@ export default async function logger({mock, spreadsheetId, poll, poll2, printEve
     await takeAndRecordTemp(); // Run one right away
 }
 
-function appendValues(spreadsheetId, auth, values) {
+let firstAppend = true;
+async function appendValues(spreadsheetId, auth, values) {
+    if (firstAppend) {
+        firstAppend = false;
+        await sheets.spreadsheets.values.updateAsync({
+            auth,
+            spreadsheetId,
+            range: `Sheet1!A1:${AZ[fields.length]}1`,
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [headers]
+            }
+        });
+    }
     return sheets.spreadsheets.values.appendAsync({
         auth,
         spreadsheetId,
@@ -88,25 +101,30 @@ function appendValues(spreadsheetId, auth, values) {
     });
 }
 
+let updatedSheetRows;
 async function updateLatestValues(spreadsheetId, auth, values, maxRows = 100) {
-    const response = await sheets.spreadsheets.values.getAsync({
-        auth,
-        spreadsheetId,
-        range: 'Sheet2!A1:C100'
-    });
-    let rows = response.values || [];
-    if (rows.length === 0) {
-        rows.unshift(headers);
+    const totalRows = maxRows + 1; // One for header
+    const range = `Sheet2!A1:${AZ[fields.length]}${totalRows}`;
+    if (!updatedSheetRows) { // Only the first time grab data to elimiante some calls
+        const response = await sheets.spreadsheets.values.getAsync({
+            auth,
+            spreadsheetId,
+            range
+        });
+        updatedSheetRows = response.values || [];
     }
-    rows.splice(1, 0, ...values);
-    rows = _.take(rows, maxRows + 1); // One for header
+    if (updatedSheetRows.length === 0) {
+        updatedSheetRows.unshift(headers);
+    }
+    updatedSheetRows.splice(1, 0, ...values);
+    updatedSheetRows = _.take(updatedSheetRows, totalRows);
     return sheets.spreadsheets.values.updateAsync({
         auth,
         spreadsheetId,
-        range: `Sheet2!A1:${AZ[fields.length]}100`,
+        range,
         valueInputOption: 'USER_ENTERED',
         resource: {
-            values: rows
+            values: updatedSheetRows
         }
     });
 }
